@@ -1,0 +1,26 @@
+# Exclude the virtual environment directories (we rebuild dependencies inside the container)
+
+venv/
+env/
+ENV/
+
+# Exclude Python cache files
+
+**pycache**/
+_.pyc
+_.pyo
+\*.pyd
+
+# Exclude Git files and Docker configuration files
+
+.git
+.gitignore
+
+# Exclude local environment files if not needed
+
+.env
+
+# Optionally ignore tests and documentation if not needed in production
+
+tests/
+docs/
