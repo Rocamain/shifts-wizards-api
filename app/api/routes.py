@@ -1,67 +1,75 @@
 from flask import Blueprint, request, jsonify
-from app.api.services import distribute_shifts  # Ensure this module is correctly imported
+import json
+
+# <-- Import both allocate_shifts and fill_in_unassigned
+from app.api.services import allocate_shifts, fill_in_unassigned
 
 api = Blueprint("api", __name__)
+
+
 
 @api.route("/schedule", methods=["POST"])
 def schedule():
     try:
-        data = request.json
+        data = request.json or {}
+        shifts_input  = data.get("shifts")      # list[list[shift]]
+        employees     = data.get("employees")   # list[staff]
+        rest_priority = data.get("restPriority", 3)
 
-        # Ensure JSON data is received
-        if not data:
-            return jsonify({"error": "Missing JSON data"}), 400
+        # 1) Basic payload validation
+        if shifts_input is None or employees is None:
+            return (
+                jsonify({"error": "Missing required fields: 'shifts' and 'employees'"}),
+                400
+            )
 
-        # Validate required fields
-        if "shifts" not in data or "employees" not in data:
-            return jsonify({"error": "Missing required fields: 'shifts' and 'employees'"}), 400
+        # 2) restPriority must be an int 1–5
+        if not isinstance(rest_priority, int) or not (1 <= rest_priority <= 5):
+            return (
+                jsonify({"error": "'restPriority' must be an integer between 1 and 5"}),
+                400
+            )
 
-        shifts = data["shifts"]
-        employees = data["employees"]
+        print(f"✅ Received {len(shifts_input)} days of shifts, "
+              f"{len(employees)} employees, restPriority={rest_priority}")
 
-        # 🔵 Debugging: Print the received input data
-        print("\n📥 Received shifts:", shifts)
-        print("\n📥 Received employees:", employees)
+        # 3) Capture metadata so we can re-inject employeeRole + candidates
+        id_lookup = {}
+        for day_list in shifts_input:
+            for sh in day_list:
+                id_lookup[sh["id"]] = {
+                    "employeeRole": sh["employeeRole"],
+                    "candidates":   sh.get("candidates"),
+                }
 
-        # Validate input types
-        if not isinstance(shifts, list) or not isinstance(employees, list):
-            return jsonify({"error": "'shifts' and 'employees' must be lists"}), 400
+        # 4) First, run the MIP with contract-hour caps:
+        mip_schedule = allocate_shifts(shifts_input, employees, rest_priority)
 
-        # Call shift distribution function with correct argument order
-        schedule = distribute_shifts(shifts, employees)
+        # 5) Next, fill any “unassigned” slots by ignoring contract caps (but still enforcing 13h rest, etc.)
+        full_schedule = fill_in_unassigned(mip_schedule, shifts_input, employees)
 
-        # 🔵 Debugging: Print the result before sending it back
-        print("\n🔵 Generated Schedule:", schedule)
+        # 6) Rebuild a 7-day array of fully-formed shift objects
+        formatted = [[] for _ in range(7)]
+        for day in range(7):
+            for sh in full_schedule.get(day, []):
+                meta = id_lookup.get(sh["id"], {})
+                formatted[day].append({
+                    "id":             sh["id"],
+                    "day":            day,
+                    "startTime":      sh["startTime"],
+                    "endTime":        sh["endTime"],
+                    "employeeRole":   sh["employeeRole"],
+                    "candidates":     sh["candidates"],
+                    "employee":       sh.get("employee"),
+                    "finalCandidate": sh.get("finalCandidate"),
+                    "color":          sh.get("color", "bg-gray-500"),
+                })
 
+        print({
+            'data received': data,
+            "solution": formatted})
 
-        formatted_schedule = [[] for _ in range(7)]  # 7 empty lists for each day of the week
-
-        for day in range(7):  # Loop through Sunday (0) to Saturday (6)
-            if day in schedule:
-                formatted_schedule[day] = [
-                    {   "id": shift["id"],
-                        "day": day,
-                        "startTime": shift["startTime"],
-                        "endTime": shift["endTime"],
-                        "employee": shift["employee"],  # This will be None if unassigned
-                        "finalCandidate": shift["employee"],  # For frontend compatibility
-                        'color': shift["color"]
-                    }
-                    for shift in schedule[day]
-                ]
-
-
-        response = {
-            "shifts": formatted_schedule,
-        }
-
-
-        print('res:', response)
-        return jsonify(response), 200
-
-    except KeyError as e:
-        print(f"❌ Missing Key Error: {e}")
-        return jsonify({"error": f"Missing key: {str(e)}"}), 400
+        return jsonify({"shifts": formatted}), 200
 
     except Exception as e:
         print(f"❌ Unexpected Error: {e}")
