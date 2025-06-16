@@ -1,7 +1,5 @@
 from flask import Blueprint, request, jsonify
-import json
-
-# <-- Import both allocate_shifts and fill_in_unassigned
+import psutil, os
 from app.api.services import allocate_shifts, fill_in_unassigned
 
 api = Blueprint("api", __name__)
@@ -65,10 +63,8 @@ def schedule():
                     "color":          sh.get("color", "bg-gray-500"),
                 })
 
-        print({
-            'data received': data,
-            "solution": formatted})
 
+        print("🔍 Memory usage (MB):", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
         return jsonify({"shifts": formatted}), 200
 
     except Exception as e:
