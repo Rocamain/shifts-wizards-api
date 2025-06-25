@@ -1,0 +1,311 @@
+---
+tags:
+  - Schedule
+summary: Allocate staff to shifts over a 7-day period
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  - in: body
+    name: payload
+    required: true
+    schema:
+      type: object
+      properties:
+        shifts:
+          type: array
+          items:
+            type: array
+            items:
+              $ref: "#/definitions/Shift"
+        employees:
+          type: array
+          items:
+            $ref: "#/definitions/Employee"
+        restPriority:
+          type: integer
+          default: 3
+      example:
+        shifts:
+          - # Day 0
+            - id: "19d46606-c058-4085-b01b-b60e8eaa9ba1"
+              day: 0
+              startTime: "06:00"
+              endTime: "12:00"
+              employeeRole: "TL"
+              candidates: ["4", "2", "3"]
+            - id: "7ef44729-5793-4d37-b8e6-be459a14ab32"
+              day: 0
+              startTime: "06:00"
+              endTime: "13:00"
+              employeeRole: "BAKER"
+              candidates:
+                ["ctm-2", "ctm-3", "ctm-4", "ctm-5", "ctm-7", "ctm-10"]
+            - id: "9fe31b7b-5d06-46eb-9313-572c6b54fcfd"
+              day: 0
+              startTime: "10:00"
+              endTime: "22:00"
+              employeeRole: "CTM"
+              candidates:
+                [
+                  "ctm-1",
+                  "ctm-2",
+                  "ctm-3",
+                  "ctm-4",
+                  "ctm-5",
+                  "ctm-6",
+                  "ctm-7",
+                  "ctm-8",
+                ]
+          - # Day 1
+            - id: "e237280c-fb0f-4327-850c-499c30f0d690"
+              day: 1
+              startTime: "06:00"
+              endTime: "12:00"
+              employeeRole: "BAKER"
+              candidates:
+                ["ctm-2", "ctm-3", "ctm-4", "ctm-5", "ctm-7", "ctm-10"]
+          - [] # Day 2
+          - [] # Day 3
+          - [] # Day 4
+          - [] # Day 5
+          - [] # Day 6
+        employees:
+          - id: "4"
+            name: "David Brown"
+            contractHours: 30
+            unavailableDates:
+              - day: 5
+                timeFrame:
+                  start: "06:00"
+                  end: "14:00"
+              - day: 4
+                timeFrame:
+                  start: "06:00"
+                  end: "14:00"
+            totalWorkedHours: 0
+            assignedShifts: []
+            lastShiftEndTime: null
+            role: "TL"
+            isBaker: false
+            color: "bg-rose-500"
+            accentColor: "accent-rose-500"
+          - id: "2"
+            name: "Bob Lance"
+            contractHours: 30
+            unavailableDates:
+              - day: 1
+                timeFrame:
+                  start: "14:00"
+                  end: "22:00"
+              - day: 2
+                timeFrame:
+                  start: "14:00"
+                  end: "22:00"
+              - day: 3
+                timeFrame:
+                  start: "14:00"
+                  end: "22:00"
+            totalWorkedHours: 0
+            assignedShifts: []
+            lastShiftEndTime: null
+            role: "TL"
+            isBaker: false
+            color: "bg-lime-700"
+            accentColor: "accent-lime-700"
+          - id: "3"
+            name: "Charlie Young"
+            contractHours: 30
+            unavailableDates:
+              - day: 3
+                timeFrame:
+                  start: "06:00"
+                  end: "22:00"
+            totalWorkedHours: 0
+            assignedShifts: []
+            lastShiftEndTime: null
+            role: "TL"
+            isBaker: false
+            color: "bg-amber-700"
+            accentColor: "accent-amber-700"
+          - id: "1"
+            name: "Alice Bed"
+            contractHours: 30
+            unavailableDates:
+              - day: 0
+                timeFrame:
+                  start: "06:00"
+                  end: "14:00"
+              - day: 2
+                timeFrame:
+                  start: "14:00"
+                  end: "22:00"
+            totalWorkedHours: 0
+            assignedShifts: []
+            lastShiftEndTime: null
+            role: "TL"
+            isBaker: false
+            color: "bg-blue-700"
+            accentColor: "accent-blue-700"
+          - id: "ctm-1"
+            name: "Alice Green"
+            contractHours: 16
+            unavailableDates:
+              - day: 1
+                timeFrame:
+                  start: "14:00"
+                  end: "22:00"
+            totalWorkedHours: 0
+            assignedShifts: []
+            lastShiftEndTime: null
+            role: "CTM"
+            isBaker: false
+            color: "bg-orange-300"
+            accentColor: "accent-orange-300"
+          - id: "ctm-2"
+            name: "Ben Carter"
+            contractHours: 16
+            unavailableDates: []
+            totalWorkedHours: 0
+            assignedShifts: []
+            lastShiftEndTime: null
+            role: "CTM"
+            isBaker: true
+            color: "bg-yellow-300"
+            accentColor: "accent-yellow-300"
+          - id: "ctm-3"
+            name: "Cara Lewis"
+            contractHours: 16
+            unavailableDates:
+              - day: 3
+                timeFrame:
+                  start: "06:00"
+                  end: "14:00"
+            totalWorkedHours: 0
+            assignedShifts: []
+            lastShiftEndTime: null
+            role: "CTM"
+            isBaker: true
+            color: "bg-green-300"
+            accentColor: "accent-green-300"
+          - id: "ctm-4"
+            name: "Dan Foster"
+            contractHours: 16
+            unavailableDates: []
+            totalWorkedHours: 0
+            assignedShifts: []
+            lastShiftEndTime: null
+            role: "CTM"
+            isBaker: true
+            color: "bg-teal-300"
+            accentColor: "accent-teal-300"
+restPriority:
+  type: integer
+  default: 3
+responses:
+  200:
+    description: List of scheduled shifts per day
+    schema:
+      type: object
+      properties:
+        shifts:
+          type: array
+          items:
+            type: array
+            items:
+              $ref: "#/definitions/Shift"
+    examples:
+      application/json:
+        shifts:
+          - []
+          - []
+          - []
+          - []
+          - []
+          - []
+          - []
+  400:
+    description: Missing or invalid input
+  500:
+    description: Unexpected server error
+definitions:
+  TimeFrame:
+    type: object
+    properties:
+      start:
+        type: string
+      end:
+        type: string
+  UnavailableDate:
+    type: object
+    properties:
+      day:
+        type: integer
+      timeFrame:
+        $ref: "#/definitions/TimeFrame"
+  Employee:
+    type: object
+    required:
+      - id
+      - name
+      - contractHours
+      - unavailableDates
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      contractHours:
+        type: number
+      unavailableDates:
+        type: array
+        items:
+          $ref: "#/definitions/UnavailableDate"
+      totalWorkedHours:
+        type: number
+      assignedShifts:
+        type: array
+        items:
+          type: object
+      lastShiftEndTime:
+        type: string
+        nullable: true
+      role:
+        type: string
+      isBaker:
+        type: boolean
+      color:
+        type: string
+      accentColor:
+        type: string
+  Shift:
+    type: object
+    required:
+      - id
+      - day
+      - startTime
+      - endTime
+      - employeeRole
+      - candidates
+    properties:
+      id:
+        type: string
+      day:
+        type: integer
+      startTime:
+        type: string
+      endTime:
+        type: string
+      employeeRole:
+        type: string
+      candidates:
+        type: array
+        items:
+          type: string
+      employee:
+        type: string
+      finalCandidate:
+        type: string
+      color:
+        type: string
