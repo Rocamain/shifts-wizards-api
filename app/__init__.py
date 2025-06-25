@@ -16,7 +16,13 @@ def create_app():
     # CORS setup
     env = os.environ.get("FLASK_ENV", "production")
     origins = "http://localhost:3000" if env == "development" else os.environ.get("FRONTEND_URL")
-    CORS(app, resources={r"/api/*": {"origins": origins}})
+    # CORS setup
+    CORS(app, resources={
+        r"/api/*": {"origins": origins},
+        r"/apidocs/*": {"origins": "*"},
+        r"/apispec.json": {"origins": "*"},
+        r"/flasgger_static/*": {"origins": "*"}
+    })
 
     # Swagger configuration
     swagger_config = {
