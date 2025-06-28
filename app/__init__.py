@@ -3,6 +3,8 @@ from flask import Flask, redirect,request, jsonify
 from flask_cors import CORS
 from .api.routes import api as schedule_bp
 from flasgger import Swagger
+from dotenv import load_dotenv
+load_dotenv()
 
 def create_app():
     app = Flask(__name__)
@@ -12,16 +14,20 @@ def create_app():
         if request.path.startswith("/api/"):
             expected_key = os.environ.get("SECRET_KEY")
             provided_key = request.headers.get("X-API-KEY")
-            print(provided_key)
             if not expected_key or provided_key != expected_key:
                 return jsonify({"error": "Unauthorized"}), 401
     # Redirect root URL to Swagger UI
+    @app.route("/health")
+    def health():
+     return "", 200
+
     @app.route("/")
     def root():
         return redirect("/apidocs/")
 
     # Determine allowed origins, default to allow all if FRONTEND_URL is not set
     env = os.environ.get("FLASK_ENV", "production")
+
     if env == "development":
         api_origins = "http://localhost:3000/*"
     else:
